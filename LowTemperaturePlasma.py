@@ -16,6 +16,10 @@ from src.ltp_system.plotter.barplots import Figure_4d, Figure_4a, Figure_4b
 from src.ltp_system.plotter.scaling_studies import run_data_scaling_study, run_ablation_study_architectures, Figure_6a_mean_all_outputs, Figure_6a_specific_outputs, Figure_6e_mean_all_outputs, Figure_6e_specific_outputs, Figure_computation_times
 from src.ltp_system.plotter.outputs_vs_pressure import run_figures_output_vs_pressure_diff_datasets, run_figures_output_vs_pressure_diff_architectures
 
+import matplotlib as mpl
+mpl.rcParams.update(mpl.rcParamsDefault)
+mpl.rcParams["text.usetex"] = False
+
 
 output_labels = [r'O$_2$(X)', r'O$_2$(a$^1\Delta_g$)', r'O$_2$(b$^1\Sigma_g^+$)', r'O$_2$(Hz)', r'O$_2^+$', r'O($^3P$)', r'O($^1$D)', r'O$^+$', r'O$^-$', r'O$_3$', r'O$_3^*$', r'$T_g$', r'T$_{nw}$', r'$E/N$', r'$v_d$', r'T$_{e}$', r'$n_e$']
 
