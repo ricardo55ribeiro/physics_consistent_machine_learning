@@ -155,7 +155,11 @@ def get_trained_bootstraped_models(config_model, config_plotting, preprocessed_d
 
         # 4. PLATEAU BASED STOPPING - Define the scheduler and monitor validation loss
         train_loader = torch.utils.data.DataLoader(bootstrap_train_data, batch_size=config_model['batch_size'], shuffle=True) 
-        scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10, verbose=True)
+        #scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10, verbose=True)
+        # verbose change 01/03
+
+        scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10)
+        
         
         # 5. Train Network Without Physical Bias
         model_losses_dict = train_model(config_plotting, config_model, model, preprocessed_data, loss_fn, optimizer, device, checkpoint_dir, scheduler, train_loader, val_loader)
@@ -219,8 +223,12 @@ def train_model(config_plotting, config_model, model, preprocessed_data, loss_fn
         # --------------------------- Validation loop
         model.eval()  # set mode
         with torch.no_grad():
-            val_loss, val_loss_physics, val_loss_P, val_loss_I, val_loss_ne = _run_epoch_val(model, val_loader, loss_fn, device, scheduler, config_model, preprocessed_data)
+            
+            #val_loss, val_loss_physics, val_loss_P, val_loss_I, val_loss_ne = _run_epoch_val(model, val_loader, loss_fn, device, scheduler, config_model, preprocessed_data)
+            # verbose change 01/03
 
+            val_loss, val_loss_physics, val_loss_P, val_loss_I, val_loss_ne = _run_epoch_val(model, val_loader, loss_fn, device, scheduler, optimizer, config_model, preprocessed_data)
+            
             # append validation loss values
             val_losses.append(val_loss) # the val loss only considers how well the model generalizes to new data 
             val_losses_physics.append(val_loss_physics)
@@ -412,7 +420,7 @@ def _run_epoch_train(config_model, model, train_loader, loss_fn, optimizer, devi
 
 
 # --------------------------------------------------------------- Validation loop
-def _run_epoch_val(model, val_loader, loss_fn, device, scheduler, config_model, preprocessed_data):
+def _run_epoch_val(model, val_loader, loss_fn, device, scheduler, optimizer, config_model, preprocessed_data):
 
     total_val_loss = 0
     total_val_loss_physics = 0
@@ -451,7 +459,19 @@ def _run_epoch_val(model, val_loader, loss_fn, device, scheduler, config_model, 
     total_val_loss_ne = total_val_loss_ne/n_batches
 
     # Reduce Learning Rate When Validation Loss Plateaus
+    
+    #scheduler.step(total_val_loss)
+    # verbose change 01/03
+
+    old_lr = optimizer.param_groups[0]["lr"]
     scheduler.step(total_val_loss)
+    new_lr = optimizer.param_groups[0]["lr"]
+
+    if new_lr < old_lr:
+        print(f"[LR] ReduceLROnPlateau reduced lr: {old_lr:.3e} -> {new_lr:.3e}")
+
+
+
 
     return total_val_loss, total_val_loss_physics, total_val_loss_P, total_val_loss_I, total_val_loss_ne
 
