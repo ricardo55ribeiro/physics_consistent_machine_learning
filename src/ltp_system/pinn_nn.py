@@ -555,7 +555,7 @@ def load_checkpoints(config_model, model_class, save_dir, print_messages = True)
     # Load aggregated losses
     losses_path = os.path.join(save_dir, 'aggregated_losses.pth')
     if os.path.exists(losses_path):
-        loaded_losses = torch.load(losses_path)
+        loaded_losses = torch.load(losses_path, weights_only = False)
     else:
         print("Warning: Aggregated losses file not found.")
         loaded_losses = {}
@@ -563,7 +563,7 @@ def load_checkpoints(config_model, model_class, save_dir, print_messages = True)
     # Load aggregated model training info
     path_1 = os.path.join(save_dir, 'aggregated_model_info.pth')
     if os.path.exists(path_1):
-        checkpoint_1 = torch.load(path_1)
+        checkpoint_1 = torch.load(path_1, weights_only = False)
         hidden_sizes   = checkpoint_1['hidden_sizes']
         activation_fns = checkpoint_1['activation_fns']
         training_time = checkpoint_1['training_time']
@@ -575,7 +575,7 @@ def load_checkpoints(config_model, model_class, save_dir, print_messages = True)
         model = model_class(config_model)
         checkpoint_path = os.path.join(save_dir, f'model_{i}_checkpoint.pth')
         if os.path.exists(checkpoint_path):
-            checkpoint = torch.load(checkpoint_path)
+            checkpoint = torch.load(checkpoint_path, weights_only = False)
             model.load_state_dict(checkpoint['model_state_dict'])
             model.eval()
             loaded_models.append(model)
