@@ -21,6 +21,10 @@ mpl.rcParams.update(mpl.rcParamsDefault)
 mpl.rcParams["text.usetex"] = False
 
 
+
+# Projection Matrix definition (it's better to keep it)
+W_matrix = torch.eye(17)
+
 output_labels = [r'O$_2$(X)', r'O$_2$(a$^1\Delta_g$)', r'O$_2$(b$^1\Sigma_g^+$)', r'O$_2$(Hz)', r'O$_2^+$', r'O($^3P$)', r'O($^1$D)', r'O$^+$', r'O$^-$', r'O$_3$', r'O$_3^*$', r'$T_g$', r'T$_{nw}$', r'$E/N$', r'$v_d$', r'T$_{e}$', r'$n_e$']
 
 
@@ -63,8 +67,8 @@ def main(retrain_flag, rerun_lambda_study):
         saving_dir = 'src/ltp_system/figures/Figures_4/Figure_4b/'
         for error_type in ['mape', 'rmse']:
             # Performances on output predictions
-            nn_error_sem_dict = compute_projection_results(config['nn_model'], torch.eye(17), testing_file, data_preprocessing_info, nn_models, error_type)
-            pinn_error_sem_dict = compute_projection_results(config['pinn_model'], torch.eye(17), testing_file, data_preprocessing_info, pinn_models, error_type)
+            nn_error_sem_dict = compute_projection_results(config['nn_model'], W_matrix, testing_file, data_preprocessing_info, nn_models, error_type)
+            pinn_error_sem_dict = compute_projection_results(config['pinn_model'], W_matrix, testing_file, data_preprocessing_info, pinn_models, error_type)
             Figure_4a(config['plotting'], nn_error_sem_dict, pinn_error_sem_dict, error_type)
             Figure_4d(nn_error_sem_dict, config['nn_model'], config['plotting'], error_type)  
 
@@ -86,7 +90,7 @@ def main(retrain_flag, rerun_lambda_study):
             'RETRAIN_MODEL': retrain_flag if retrain_flag is not None else config['plotting']['RERUN_ABLATION_STUDY'],
             'n_bootstrap_models': 1, 
             'PRINT_LOSS_VALUES': False,
-            'w_matrix': torch.eye(17),
+            'w_matrix': W_matrix,
             'APPLY_EARLY_STOPPING': True,
             'activation_fns': ['leaky_relu'] * n_hidden_layers, 
             'extract_results_specific_outputs': ['O2(X)', 'O2(+,X)', 'ne'],
@@ -115,11 +119,20 @@ def main(retrain_flag, rerun_lambda_study):
         #///////////////////////////////// 10. DATA SCALING STUDY //////////////////////////////#
         #///////////////////////////////////////////////////////////////////////////////////////#
         options['n_samples']     = 20
-        options['RETRAIN_MODEL'] =  retrain_flag if retrain_flag is not None else config['plotting']['RERUN_DATA_SCALING_STUDY']
-        options['hidden_sizes']  = [50,50] 
-        options['output_dir']    = 'src/ltp_system/figures/Figures_6d/'
-        options['checkpoints_dir'] = f'output/ltp_system/checkpoints/different_datasets/'
+        options['hidden_sizes']  = [50,50]
         
+        
+        # Fix problem running only point 2)
+        # --
+        #options['RETRAIN_MODEL'] =  retrain_flag if retrain_flag is not None else config['plotting']['RERUN_DATA_SCALING_STUDY']
+        options['RETRAIN_MODEL'] = True
+        options['output_dir']    = 'src/ltp_system/figures/Figures_6d/'
+        os.makedirs(os.path.join(options['output_dir'], "table_results"), exist_ok=True)    # added
+        os.makedirs(os.path.join(options['output_dir'], "plots"), exist_ok=True)            # added
+        # --
+
+        options['checkpoints_dir'] = f'output/ltp_system/checkpoints/different_datasets/'
+    
         # Get the list of files to analyze
         dataset_sizes = [20, 50, 100, 200, 400, 600, 800, 1000, 1500, 2000, 2500]
         df_results_6e_all, df_results_6e_specific, _ = run_data_scaling_study(config, large_dataset_path, dataset_sizes, options)
@@ -217,16 +230,16 @@ def get_trained_pinn(config, data_preprocessing_info, train_data, val_loader):
 
 def get_laws_dict(file_name, preprocessed_data, nn_models, pinn_models, saving_dir, error_type):
     if error_type == 'mape':
-        nn_laws_dict   = compute_mape_physical_laws(file_name, preprocessed_data, nn_models, torch.eye(17), "nn_model")
-        pinn_laws_dict = compute_mape_physical_laws(file_name, preprocessed_data, pinn_models, torch.eye(17), "pinn_model")
+        nn_laws_dict   = compute_mape_physical_laws(file_name, preprocessed_data, nn_models, W_matrix, "nn_model")
+        pinn_laws_dict = compute_mape_physical_laws(file_name, preprocessed_data, pinn_models, W_matrix, "pinn_model")
     elif error_type == 'rmse':
-        nn_laws_dict   = compute_rmse_physical_laws(file_name, preprocessed_data, nn_models, torch.eye(17), "nn_model")
-        pinn_laws_dict = compute_rmse_physical_laws(file_name, preprocessed_data, pinn_models, torch.eye(17), "pinn_model")
+        nn_laws_dict   = compute_rmse_physical_laws(file_name, preprocessed_data, nn_models, W_matrix, "nn_model")
+        pinn_laws_dict = compute_rmse_physical_laws(file_name, preprocessed_data, pinn_models, W_matrix, "pinn_model")
     else:
         raise ValueError(f"Invalid error type: {error_type}. Please choose 'mape' or 'rmse'.") 
 
     # compute the errors in compliance with physical laws for the loki model
-    loki_laws_dict = compute_errors_physical_laws_loki(file_name, preprocessed_data, torch.eye(17), error_type)
+    loki_laws_dict = compute_errors_physical_laws_loki(file_name, preprocessed_data, W_matrix, error_type)
 
     # merge the dictionaries
     laws_dict = {**nn_laws_dict, **pinn_laws_dict, **loki_laws_dict}
