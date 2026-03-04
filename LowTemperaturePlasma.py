@@ -24,6 +24,15 @@ mpl.rcParams["text.usetex"] = False
 
 # Projection Matrix definition (it's better to keep it)
 W_matrix = torch.eye(17)
+W_matrix[0,1] = 1
+W_matrix[1,0] = 1
+W_matrix += 1e-6 * torch.eye(17)        # So the matrix is positive definite
+
+
+# Flag to run only figures 4
+RUN_ONLY_FIG4 = True
+
+
 
 output_labels = [r'O$_2$(X)', r'O$_2$(a$^1\Delta_g$)', r'O$_2$(b$^1\Sigma_g^+$)', r'O$_2$(Hz)', r'O$_2^+$', r'O($^3P$)', r'O($^1$D)', r'O$^+$', r'O$^-$', r'O$_3$', r'O$_3^*$', r'$T_g$', r'T$_{nw}$', r'$E/N$', r'$v_d$', r'T$_{e}$', r'$n_e$']
 
@@ -75,6 +84,10 @@ def main(retrain_flag, rerun_lambda_study):
             # Performances on compliance with physical laws
             laws_dict = get_laws_dict(testing_file, data_preprocessing_info, nn_models, pinn_models, saving_dir, error_type)
             Figure_4b(config['plotting'], laws_dict, error_type)
+        
+        # Flag to run only figures 4
+        if RUN_ONLY_FIG4:
+            return
         
         
         #///////////////////////////////////////////////////////////////////////////////////////#
