@@ -25,9 +25,14 @@ def Figure_4a(config_plotting, nn_mape_dict, pinn_mape_dict, error_type):
 
     bar_plot_palette = config_plotting['barplot_palette']
     mape_nn = nn_mape_dict['model'][error_type]
-    mape_pinn = pinn_mape_dict['model'][error_type]
+    
+    # Remove PINN Calculations -> 08/03
+    #mape_pinn = pinn_mape_dict['model'][error_type]
+
     mape_nn_proj = nn_mape_dict['P_I_ne'][error_type]
-    mape_pinn_proj = pinn_mape_dict['P_I_ne'][error_type]
+
+    # Remove PINN Calculations -> 08/03
+    #mape_pinn_proj = pinn_mape_dict['P_I_ne'][error_type]
     num = len(mape_nn)
 
     # Plot configuration
@@ -41,18 +46,27 @@ def Figure_4a(config_plotting, nn_mape_dict, pinn_mape_dict, error_type):
     # Set position of bar on X axis
     br1 = np.arange(num)
     br2 = [x + barWidth for x in br1]
-    br3 = [x + barWidth for x in br2]
-    br4 = [x + barWidth for x in br3]
+    
+    # Remove PINN Calculations -> 08/03
+    #br3 = [x + barWidth for x in br2]
+    #br4 = [x + barWidth for x in br3]
+
     plt.bar(br1, mape_nn,  color=bar_plot_palette[0], width=barWidth, edgecolor='black', label='NN', linewidth=edge_linewidth)
     plt.bar(br2, mape_nn_proj,  color=bar_plot_palette[1], width=barWidth, edgecolor='black', label='NN projection', linewidth=edge_linewidth)
-    plt.bar(br3, mape_pinn,  color=bar_plot_palette[2], width=barWidth, edgecolor='black', label='PINN', linewidth=edge_linewidth)
-    plt.bar(br4, mape_pinn_proj,  color=bar_plot_palette[3], width=barWidth, edgecolor='black', label='PINN projection', linewidth=edge_linewidth)
+    
+    # Remove PINN Calculations -> 08/03
+    #plt.bar(br3, mape_pinn,  color=bar_plot_palette[2], width=barWidth, edgecolor='black', label='PINN', linewidth=edge_linewidth)
+    #plt.bar(br4, mape_pinn_proj,  color=bar_plot_palette[3], width=barWidth, edgecolor='black', label='PINN projection', linewidth=edge_linewidth)
 
     # Adding Xticks
     if error_type == 'mape':
         plt.ylabel('MAPE (\%)', fontweight='bold', fontsize=24)
     elif error_type == 'rmse':
         plt.ylabel('RMSE', fontweight='bold', fontsize=24, labelpad=10)
+    
+    # Remove PINN Calculations -> 08/03
+    #plt.xticks([r + barWidth for r in range(num)], output_labels, rotation=45, fontsize=24, fontweight='bold')
+    
     plt.xticks([r + barWidth for r in range(num)], output_labels, rotation=45, fontsize=24, fontweight='bold')
     plt.yticks(fontsize=24)
     
@@ -69,7 +83,10 @@ def Figure_4a(config_plotting, nn_mape_dict, pinn_mape_dict, error_type):
         plt.text(0, y_max * 1.12, r'($\times10^{-3}$)', transform=plt.gca().get_yaxis_transform(), fontsize=20)
     
     # Add legend
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.335), ncol=4, fontsize=24, frameon=False)
+    # Remove PINN Calculations -> 08/03
+    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.335), ncol=4, fontsize=24, frameon=False)
+
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.335), ncol=2, fontsize=24, frameon=False)
     
     # Save figures
     output_dir = config_plotting['output_dir'] + "Figures_4/Figure_4a/"
@@ -150,7 +167,10 @@ def Figure_4b(config_plotting, laws_dict, error_type):
     all_errors, all_sems, all_abs_errors = [], [], []
 
     # Loop through the model types and extract corresponding values
-    for model_type in ["nn_model", "pinn_model", "nn_model_proj", "pinn_model_proj"]:
+    
+    # Remove PINN Calculations -> 08/03
+    #for model_type in ["nn_model", "pinn_model", "nn_model_proj", "pinn_model_proj"]:
+    for model_type in ["nn_model", "nn_model_proj"]:
         errors = [laws_dict[model_type][metric] for metric in [f"p_{error_type}", f"i_{error_type}", f"ne_{error_type}"]]
         sems = [laws_dict[model_type][sem_metric] for sem_metric in ["p_sem", "i_sem", "ne_sem"]]
         #abs_errors = [laws_dict[model_type][sem_metric] for sem_metric in ["p_abs_err", "i_abs_err", "ne_abs_err"]]
@@ -161,7 +181,11 @@ def Figure_4b(config_plotting, laws_dict, error_type):
 
     # Set width of bar 
     width = 0.2
-    models = ["NN", "PINN", "NN\nprojection", "PINN\nprojection"]
+
+    # Remove PINN Calculations -> 08/03
+    #models = ["NN", "PINN", "NN\nprojection", "PINN\nprojection"]
+    
+    models = ["NN", "NN\nprojection"]
 
     x = np.arange(len(models))
     palette = config_plotting['barplot_palette']

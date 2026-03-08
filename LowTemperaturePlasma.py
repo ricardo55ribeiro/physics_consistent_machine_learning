@@ -24,14 +24,20 @@ mpl.rcParams["text.usetex"] = False
 
 # Projection Matrix definition (it's better to keep it)
 W_matrix = torch.eye(17)
+
+
 W_matrix[0,1] = 1
 W_matrix[1,0] = 1
-W_matrix += 1e-6 * torch.eye(17)        # So the matrix is positive definite
+
+#W_matrix[0,2] = 1
+#W_matrix[2,0] = 1
+
+#W_matrix[0,5] = 1
+#W_matrix[5,0] = 1
 
 
-# Flag to run only figures 4
+# Flag to run only figures 4 (quick analysis to see if it's worth it to use this projection matrix)
 RUN_ONLY_FIG4 = True
-
 
 
 output_labels = [r'O$_2$(X)', r'O$_2$(a$^1\Delta_g$)', r'O$_2$(b$^1\Sigma_g^+$)', r'O$_2$(Hz)', r'O$_2^+$', r'O($^3P$)', r'O($^1$D)', r'O$^+$', r'O$^-$', r'O$_3$', r'O$_3^*$', r'$T_g$', r'T$_{nw}$', r'$E/N$', r'$v_d$', r'T$_{e}$', r'$n_e$']
@@ -67,9 +73,11 @@ def main(retrain_flag, rerun_lambda_study):
         loss_curves(config['nn_model'], config['plotting'], nn_losses_dict)
     
         # /// 7. TRAIN THE PHYSICS-INFORMED NEURAL NETWORK (PINN) ///
-        plot_pinn_errors_vs_lambda(config, data_preprocessing_info, train_data, val_loader )
-        pinn_models, pinn_losses_dict, _ = get_trained_pinn(config, data_preprocessing_info, train_data, val_loader)
-        loss_curves(config['pinn_model'], config['plotting'], pinn_losses_dict)
+        
+        # Remove PINN Calculations -> 08/03
+        #plot_pinn_errors_vs_lambda(config, data_preprocessing_info, train_data, val_loader )
+        #pinn_models, pinn_losses_dict, _ = get_trained_pinn(config, data_preprocessing_info, train_data, val_loader)
+        #loss_curves(config['pinn_model'], config['plotting'], pinn_losses_dict)
 
         
         # /// 8. TESTSET RESULTS OF NN, PINN and PROJECTION APPLIED TO BOTH MODELS PREDICTIONS /// 
@@ -77,12 +85,21 @@ def main(retrain_flag, rerun_lambda_study):
         for error_type in ['mape', 'rmse']:
             # Performances on output predictions
             nn_error_sem_dict = compute_projection_results(config['nn_model'], W_matrix, testing_file, data_preprocessing_info, nn_models, error_type)
-            pinn_error_sem_dict = compute_projection_results(config['pinn_model'], W_matrix, testing_file, data_preprocessing_info, pinn_models, error_type)
-            Figure_4a(config['plotting'], nn_error_sem_dict, pinn_error_sem_dict, error_type)
+            
+            # Remove PINN Calculations -> 08/03
+            #pinn_error_sem_dict = compute_projection_results(config['pinn_model'], W_matrix, testing_file, data_preprocessing_info, pinn_models, error_type)
+            #Figure_4a(config['plotting'], nn_error_sem_dict, pinn_error_sem_dict, error_type)
+
+            Figure_4a(config['plotting'], nn_error_sem_dict, None, error_type)
             Figure_4d(nn_error_sem_dict, config['nn_model'], config['plotting'], error_type)  
 
+
             # Performances on compliance with physical laws
-            laws_dict = get_laws_dict(testing_file, data_preprocessing_info, nn_models, pinn_models, saving_dir, error_type)
+            
+            # Remove PINN Calculations -> 08/03
+            #laws_dict = get_laws_dict(testing_file, data_preprocessing_info, nn_models, pinn_models, saving_dir, error_type)
+
+            laws_dict = get_laws_dict(testing_file, data_preprocessing_info, nn_models, None, saving_dir, error_type)
             Figure_4b(config['plotting'], laws_dict, error_type)
         
         # Flag to run only figures 4
@@ -244,18 +261,26 @@ def get_trained_pinn(config, data_preprocessing_info, train_data, val_loader):
 def get_laws_dict(file_name, preprocessed_data, nn_models, pinn_models, saving_dir, error_type):
     if error_type == 'mape':
         nn_laws_dict   = compute_mape_physical_laws(file_name, preprocessed_data, nn_models, W_matrix, "nn_model")
-        pinn_laws_dict = compute_mape_physical_laws(file_name, preprocessed_data, pinn_models, W_matrix, "pinn_model")
+        
+        # Remove PINN Calculations -> 08/03
+        #pinn_laws_dict = compute_mape_physical_laws(file_name, preprocessed_data, pinn_models, W_matrix, "pinn_model")
     elif error_type == 'rmse':
         nn_laws_dict   = compute_rmse_physical_laws(file_name, preprocessed_data, nn_models, W_matrix, "nn_model")
-        pinn_laws_dict = compute_rmse_physical_laws(file_name, preprocessed_data, pinn_models, W_matrix, "pinn_model")
+        
+        # Remove PINN Calculations -> 08/03
+        #pinn_laws_dict = compute_rmse_physical_laws(file_name, preprocessed_data, pinn_models, W_matrix, "pinn_model")
     else:
         raise ValueError(f"Invalid error type: {error_type}. Please choose 'mape' or 'rmse'.") 
 
     # compute the errors in compliance with physical laws for the loki model
     loki_laws_dict = compute_errors_physical_laws_loki(file_name, preprocessed_data, W_matrix, error_type)
 
+
     # merge the dictionaries
-    laws_dict = {**nn_laws_dict, **pinn_laws_dict, **loki_laws_dict}
+    laws_dict = {**nn_laws_dict, **loki_laws_dict}
+
+    # Remove PINN Calculations -> 08/03
+    #laws_dict = {**nn_laws_dict, **pinn_laws_dict, **loki_laws_dict}
 
     # get the keys of the first dictionary
     keys = list(nn_laws_dict['nn_model'].keys())
@@ -298,7 +323,10 @@ if __name__ == "__main__":
         if response == '1':            
             # flush the current checkpoints, plots and tables
             retrain = flush_model_artifacts('ltp')
-            rerun_lambda_study = flush_lambda_study('ltp')
+            
+            rerun_lambda_study = False
+            # Remove PINN Calculations -> 08/03
+            #rerun_lambda_study = flush_lambda_study('ltp')
 
             print("──────────────────────────────────────────────────────────────────────────────\n")
             main(retrain, rerun_lambda_study)
@@ -306,7 +334,10 @@ if __name__ == "__main__":
             
         elif response == '2':
             retrain = False
-            rerun_lambda_study = flush_lambda_study('ltp')
+            rerun_lambda_study = False
+
+            # Remove PINN Calculations -> 08/03
+            #rerun_lambda_study = flush_lambda_study('ltp')
             print("\n[INFO] Using existing model weights and pre-computed results ...")
             print("──────────────────────────────────────────────────────────────────────────────\n")
             main(retrain, rerun_lambda_study)
@@ -315,7 +346,10 @@ if __name__ == "__main__":
         elif response == '3':
             print("\n[INFO] Using manually defined configurations ...")
             print("──────────────────────────────────────────────────────────────────────────────\n")
-            main(None)
+            
+            main(None, False)
+            # Remove PINN Calculations -> 08/03
+            #main(None)
             break
             
         else:
