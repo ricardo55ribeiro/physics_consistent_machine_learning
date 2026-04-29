@@ -1,0 +1,49 @@
+{
+  "architectures": [
+    [
+      30,
+      30
+    ],
+    [
+      50,
+      50
+    ],
+    [
+      30,
+      30,
+      30
+    ]
+  ],
+  "noise_stds": [
+    0.0,
+    0.005,
+    0.01,
+    0.02,
+    0.05,
+    0.1
+  ],
+  "noise_cases": {
+    "P_only": [
+      0
+    ],
+    "I_only": [
+      1
+    ],
+    "R_only": [
+      2
+    ],
+    "P_I_R": [
+      0,
+      1,
+      2
+    ]
+  },
+  "n_noise_seeds": 20,
+  "global_seed": 42,
+  "dataset_size": 1000,
+  "n_testing_points": 300,
+  "projection_W": "torch.eye(17)",
+  "projection_constraints": "P + I + ne",
+  "target": "clean LoKI outputs",
+  "noise": "relative Gaussian measurement noise on selected input columns"
+}

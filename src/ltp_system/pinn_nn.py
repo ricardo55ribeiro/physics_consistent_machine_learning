@@ -344,6 +344,25 @@ def get_quasi_neutrality_law_residual(x_norm, y_pred_norm, preprocessed_data):
 
 def _compute_pinn_loss(config_model, input_norm, y_pred_norm, y_target_norm, preprocessed_data, loss_fn):
 
+    physics_weights = config_model['lambda_physics']
+
+    # Fast path for pure NN training.
+    # If lambda_physics = [0, 0, 0], do not compute physical residuals.
+    if all(float(w) == 0.0 for w in physics_weights):
+        loss_data = loss_fn(y_pred_norm, y_target_norm)
+        zero = torch.zeros((), dtype=loss_data.dtype, device=loss_data.device)
+
+        return {
+            'loss_total': loss_data,
+            'loss_physics_weighted': zero,
+            'loss_P': zero,
+            'loss_I': zero,
+            'loss_ne': zero,
+            'loss_physics_unweighted': zero,
+            'loss_data': loss_data,
+            'loss_data_weighted': loss_data,
+        }
+    
     p_residual  = get_pressure_law_residual(input_norm, y_pred_norm, preprocessed_data)
     i_residual  = get_current_law_residual(input_norm, y_pred_norm, preprocessed_data)
     ne_residual = get_quasi_neutrality_law_residual(input_norm, y_pred_norm, preprocessed_data)

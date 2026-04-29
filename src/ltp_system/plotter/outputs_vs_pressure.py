@@ -419,8 +419,8 @@ def run_figures_output_vs_pressure_diff_datasets(config, options, dataset_sizes_
                 raise ValueError("Checkpoint not found. Set RETRAIN_MODEL to True or provide a valid checkpoint.")
             
             # Get the constant-current predictions for the specific model get_data_Figure_6b(networks, file_path, w_matrix, data_preprocessing_info)
-            predictions_dict_sample_idx, errors_dict_sample_idx = get_data_Figure_6b(nn_models, target_data_file_path, torch.eye(17), data_preprocessing_info)
-            
+            predictions_dict_sample_idx, errors_dict_sample_idx = get_data_Figure_6b(nn_models, target_data_file_path, options['w_matrix'], data_preprocessing_info)
+
             # inputs and targets based on the given file (simulation points)
             discrete_inputs  =  np.array(predictions_dict_sample_idx['discrete_inputs'])
             discrete_targets =  np.array(predictions_dict_sample_idx['discrete_targets'])
@@ -492,8 +492,16 @@ def run_figures_output_vs_pressure_diff_architectures(config, options, target_da
         random_architectures_list = [row for row in reader]
     random_architectures_list = [[int(num) for num in sublist] for sublist in random_architectures_list]
     
+    # Run only Fig4 and 5b -> 09/03
+    target_architecture = options.get('target_architecture', None)
+    loaded_architectures = 0
+    
+
     # loop over the different dataset lenghts
     for idx_arc, architecture in enumerate(random_architectures_list):
+
+        if target_architecture is not None and architecture != target_architecture:
+            continue
 
         # Initialize empty DataFrame with the column names
         columns_discrete = [
@@ -535,8 +543,12 @@ def run_figures_output_vs_pressure_diff_architectures(config, options, target_da
                 raise ValueError("Checkpoint not found. Set RETRAIN_MODEL to True or provide a valid checkpoint.")
             
             # Get the constant-current predictions for the specific model get_data_Figure_6b(networks, file_path, w_matrix, data_preprocessing_info)
-            predictions_dict_sample_idx, errors_dict_sample_idx = get_data_Figure_6b(nn_models, target_data_file_path, torch.eye(17), data_preprocessing_info)
+            predictions_dict_sample_idx, errors_dict_sample_idx = get_data_Figure_6b(nn_models, target_data_file_path, options['w_matrix'], data_preprocessing_info)
             
+            # Run only Fig4 and 5b -> 09/03
+            #predictions_dict_sample_idx, errors_dict_sample_idx = get_data_Figure_6b(nn_models, target_data_file_path, torch.eye(17), data_preprocessing_info)
+            
+
             # inputs and targets based on the given file (simulation points)
             discrete_inputs  =  np.array(predictions_dict_sample_idx['discrete_inputs'])
             discrete_targets =  np.array(predictions_dict_sample_idx['discrete_targets'])
@@ -585,7 +597,16 @@ def run_figures_output_vs_pressure_diff_architectures(config, options, target_da
 
         # make the plot
         Figure_6b(config, data_preprocessing_info, df_aggregated_discrete_predictions_architecture_idx, df_aggregated_continuum_predictions_architecture_idx, test_case = f"different_architectures/architecture_{idx_arc}")
+        
+        loaded_architectures += 1
     
-    print(f"Loaded {len(random_architectures_list) * n_samples} models.")
-    print(f"Saved {len(random_architectures_list)} pressure-related plots for each of the {n_outputs} outputs as .pdf files to:\n   → {config['plotting']['output_dir']} /Figures_6b/Figures_6b/test_case_different_architectures")
+
+
+    #print(f"Loaded {len(random_architectures_list) * n_samples} models.")
+    #print(f"Saved {len(random_architectures_list)} pressure-related plots for each of the {n_outputs} outputs as .pdf files to:\n   → {config['plotting']['output_dir']} /Figures_6b/Figures_6b/test_case_different_architectures")
+    
+    # Run only Fig4 and 5b -> 09/03
+    print(f"Loaded {loaded_architectures * n_samples} models.")
+    print(f"Saved {loaded_architectures} pressure-related plots for each of the {n_outputs} outputs as .pdf files to:\n   → {config['plotting']['output_dir']} /Figures_6b/Figures_6b/test_case_different_architectures")    
+    
     print(f"Saved corresponding normalized errors as .csv files.\n")
